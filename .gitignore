@@ -2,3 +2,8 @@
 
 # macOS
 .DS_Store
+
+# Documentation
+docs/**/*.*
+!docs/**/*.tex
+!docs/**/*.bib

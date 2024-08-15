@@ -1,0 +1,61 @@
+\documentclass{refart}
+\usepackage{newtxtext}
+\usepackage{upquote}
+\usepackage{cite}
+\usepackage{tikz}
+\usepackage[hidelinks, pdfusetitle]{hyperref}
+
+\newcommand\TermiPaper{\textsc{TermiPaper}}
+\newcommand\TPversion{v0.1.0}
+
+\title{Managing Academic Papers in Your Terminal With \TermiPaper}
+\author{Wuqiong Zhao\texorpdfstring{\\
+  University of California San Diego\\
+  La Jolla, CA, USA}{}}
+\date{\TPversion\\\today}
+
+\pagestyle{myfootings}
+\markboth{Managing Academic Papers in Your Terminal With \TermiPaper}%
+         {Managing Academic Papers in Your Terminal With \TermiPaper}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+  This is the abstract.
+\end{abstract}
+
+This manual is currently under construction.
+
+\tableofcontents
+
+\section{Introduction}\label{sec:introduction}
+\input{sections/introduction}
+
+\section{Installation}\label{sec:installation}
+\input{sections/installation}
+
+\section{Highlights}\label{sec:highlights}
+\input{sections/highlights}
+
+\section{Usage}\label{sec:usage}
+\input{sections/usage}
+
+\section{Conclusion}\label{sec:conclusion}
+\input{sections/conclusion}
+
+\phantomsection
+\section*{Acknowledgments}
+\addcontentsline{toc}{section}{Acknowledgments}
+
+The author would like to thank \textit{GitHub Copilot} for assisting in writing this document.
+The author would also like to thank \textit{Hubert Partl} and \textit{Axel Kielhorn} for creating
+the \texttt{refart} \LaTeX\ class for this manual.
+
+\phantomsection
+\addcontentsline{toc}{section}{References}
+\bibliographystyle{IEEEtran}
+\bibliography{IEEEabrv, ref}
+
+\end{document}

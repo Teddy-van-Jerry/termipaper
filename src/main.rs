@@ -1,3 +1,5 @@
+use termipaper::Cli;
+
 fn main() {
-    println!("This is Termipaper!");
+    Cli::dbg_args();
 }
