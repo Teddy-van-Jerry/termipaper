@@ -121,6 +121,10 @@ pub trait PaperDir {
         Self::_config_dir().to_str().unwrap().to_string()
     }
 
+    fn _config_parent_dir() -> PathBuf {
+        Self::_config_dir().parent().unwrap().to_path_buf()
+    }
+
     fn _data_dir() -> PathBuf {
         Self::_project_dirs().data_dir().to_path_buf()
     }
@@ -139,12 +143,12 @@ pub trait PaperDir {
     }
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConfigDatabase {
     pub date_created: String,
 }
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConfigOwner {
     pub name: String,
     pub email: Option<String>,
@@ -154,7 +158,7 @@ pub struct ConfigOwner {
 
 pub type ConfigDatabases = HashMap<String, ConfigDatabase>;
 
-#[derive(Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Config {
     /// The databases of papers
     pub databases: Option<ConfigDatabases>,
@@ -180,20 +184,47 @@ impl Config {
         }
     }
 
+    /// Load the config from the config file
     pub fn from_file() -> Self {
         let config_file = Self::_config_file();
         if config_file.exists() {
             let config_str = std::fs::read_to_string(config_file).unwrap();
-            let config: Config = serde_yaml::from_str(&config_str).unwrap();
-            config
+            match serde_yaml::from_str(&config_str) {
+                Ok(config) => config,
+                Err(_) => {
+                    eprintln!("Error: Cannot parse the config file at '{}'.", Self::_config_dir_str());
+                    Self::new()
+                }
+            }
         } else {
             Self::new()
         }
     }
 
+    /// Save the config to the config file
+    /// 
+    /// It will overwrite the existing config file, so be careful.
     pub fn to_file(&self) {
         let config_file = Self::_config_file();
         let config_str = serde_yaml::to_string(&self).unwrap();
+        // needs to create the config directory first
+        std::fs::create_dir_all(Self::_config_dir()).unwrap();
         std::fs::write(config_file, config_str).unwrap();
     }
 }
+
+/*
+// DANGEROUS test: it can overwrite the config file
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_config() {
+        println!("Test Config at {}", Config::_config_dir_str());
+        let config = Config::new();
+        config.to_file();
+        let config = Config::from_file();
+        assert_eq!(config, Config::new());
+    }
+}
+*/
