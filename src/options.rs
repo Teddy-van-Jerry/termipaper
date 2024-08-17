@@ -1,5 +1,6 @@
 extern crate directories;
 extern crate serde;
+extern crate chrono;
 use std::path::PathBuf;
 use std::collections::HashMap;
 use clap::{Args, Parser, Subcommand};
@@ -7,7 +8,7 @@ use directories::ProjectDirs;
 use serde::{Serialize, Deserialize};
 
 /// A terminal-based academic paper manager
-#[derive(Parser, Debug)]
+#[derive(Debug, Clone, Parser)]
 #[command(version, about, long_about = None)]
 pub struct Cli {
     /// The subcommand to run
@@ -35,29 +36,29 @@ impl Cli {
 #[derive(Args, Clone, Debug)]
 pub struct CommandActivateArgs {
     #[arg(index = 1)]
-    dir: Option<String>,
+    pub dir: Option<String>,
 }
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandAddArgs {
     #[arg(index = 1)]
-    id: String,
+    pub id: String,
     #[arg(short, long)]
-    file: Option<String>,
+    pub file: Option<String>,
 }
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandEditArgs {
     #[arg(index = 1)]
-    id: String,
+    pub id: String,
     #[arg(short, long)]
-    file: Option<String>,
+    pub file: Option<String>,
 }
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandInitArgs {
     #[arg(index = 1)]
-    dir: Option<String>,
+    pub dir: Option<String>,
 }
 
 #[derive(Args, Clone, Debug)]
@@ -67,7 +68,7 @@ pub struct CommandListArgs {
 #[derive(Args, Clone, Debug)]
 pub struct CommandOpenArgs {
     #[arg(index = 1)]
-    id: String,
+    pub id: String,
 }
 
 #[derive(Args, Clone, Debug)]
@@ -84,7 +85,7 @@ pub struct CommandRemoveArgs {
     id: String,
 }
 
-#[derive(Subcommand, Debug)]
+#[derive(Subcommand, Debug, Clone)]
 pub enum Commands {
     /// Activate a paper directory
     Activate(CommandActivateArgs),
@@ -145,7 +146,16 @@ pub trait PaperDir {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConfigDatabase {
+    /// format of data created is "YYYY-MM-DD"
     pub date_created: String,
+}
+
+impl ConfigDatabase {
+    pub fn new() -> Self {
+        Self {
+            date_created: chrono::Local::now().format("%Y-%m-%d").to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
