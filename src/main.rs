@@ -4,5 +4,8 @@ use termipaper::Manager;
 fn main() {
     Cli::dbg_args();
     let manager = Manager::new();
-    dbg!(manager);
+    dbg!(&manager);
+    if let Err(_) = manager.run() {
+        std::process::exit(1);
+    }
 }

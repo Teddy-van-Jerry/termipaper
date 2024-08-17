@@ -56,6 +56,10 @@ pub struct CommandEditArgs {
 }
 
 #[derive(Args, Clone, Debug)]
+pub struct CommandInfoArgs {
+}
+
+#[derive(Args, Clone, Debug)]
 pub struct CommandInitArgs {
     #[arg(index = 1)]
     pub dir: Option<String>,
@@ -97,6 +101,10 @@ pub enum Commands {
     List(CommandListArgs),
     /// Remove a paper from the database
     Remove(CommandRemoveArgs),
+    /// Open a paper
+    Open(CommandOpenArgs),
+    /// Get information of the database
+    Info(CommandInfoArgs),
     /// Initialize the paper database
     Init(CommandInitArgs),
     /// Search for papers in the database
