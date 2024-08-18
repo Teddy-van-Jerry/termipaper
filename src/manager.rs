@@ -161,7 +161,95 @@ impl Manager {
         Ok(())
     }
 
+    /// TermiPaper Command: config
     pub fn cmd_config(&self) -> Result<(), ()> {
+        let args = match &self.args.cmd {
+            Commands::Config(args) => args,
+            _ => {
+                assert!(
+                    false,
+                    "Internal Error: This function should only be called the 'config' command."
+                );
+                return Err(());
+            }
+        };
+        let mut has_args = false; // from the user input perspective
+        let mut config_edited = false;
+        let mut owner = self
+            .config
+            .owner
+            .clone()
+            .unwrap_or_else(crate::options::ConfigOwner::new);
+        if let Some(owner_name) = &args.owner_name {
+            has_args = true;
+            if owner_name == crate::options::CommandConfigArgs::_JUST_TO_PRINT_THIS_FIELD {
+                println!(
+                    "owner.name: {}",
+                    owner.clone().name.unwrap_or("<empty>".to_string())
+                );
+            } else {
+                owner.name = Some(owner_name.clone());
+                config_edited = true;
+            }
+        }
+        if let Some(owner_email) = &args.owner_email {
+            has_args = true;
+            if owner_email == crate::options::CommandConfigArgs::_JUST_TO_PRINT_THIS_FIELD {
+                println!(
+                    "owner.email: {}",
+                    owner.clone().email.unwrap_or("<empty>".to_string())
+                );
+            } else {
+                owner.email = Some(owner_email.clone());
+                config_edited = true;
+            }
+        }
+        if let Some(owner_affiliation) = &args.owner_affiliation {
+            has_args = true;
+            if owner_affiliation == crate::options::CommandConfigArgs::_JUST_TO_PRINT_THIS_FIELD {
+                println!(
+                    "owner.affiliation: {}",
+                    owner.clone().affiliation.unwrap_or("<empty>".to_string())
+                );
+            } else {
+                owner.affiliation = Some(owner_affiliation.clone());
+                config_edited = true;
+            }
+        }
+        if let Some(owner_link) = &args.owner_link {
+            has_args = true;
+            if owner_link == crate::options::CommandConfigArgs::_JUST_TO_PRINT_THIS_FIELD {
+                println!(
+                    "owner.link: {}",
+                    owner.clone().link.unwrap_or("<empty>".to_string())
+                );
+            } else {
+                owner.link = Some(owner_link.clone());
+                config_edited = true;
+            }
+        }
+        if !has_args {
+            println!(
+                "owner.name: {}",
+                owner.clone().name.unwrap_or("<empty>".to_string())
+            );
+            println!(
+                "owner.email: {}",
+                owner.clone().email.unwrap_or("<empty>".to_string())
+            );
+            println!(
+                "owner.link: {}",
+                owner.clone().link.unwrap_or("<empty>".to_string())
+            );
+            println!(
+                "owner.affiliation: {}",
+                owner.clone().affiliation.unwrap_or("<empty>".to_string())
+            );
+        } else if config_edited {
+            let mut new_config = self.config.clone();
+            new_config.owner = Some(owner);
+            new_config.to_file();
+        }
         Ok(())
     }
 

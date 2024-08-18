@@ -64,7 +64,7 @@ pub struct CommandConfigArgs {
 }
 
 impl CommandConfigArgs {
-    const _JUST_TO_PRINT_THIS_FIELD: &'static str = "JUST_TO_PRINT_THIS_FIELD";
+    pub const _JUST_TO_PRINT_THIS_FIELD: &'static str = "JUST_TO_PRINT_THIS_FIELD";
 }
 
 #[derive(Args, Clone, Debug)]
@@ -187,10 +187,21 @@ impl ConfigDatabase {
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct ConfigOwner {
-    pub name: String,
+    pub name: Option<String>,
     pub email: Option<String>,
     pub affiliation: Option<String>,
     pub link: Option<String>,
+}
+
+impl ConfigOwner {
+    pub fn new() -> Self {
+        Self {
+            name: None,
+            email: None,
+            affiliation: None,
+            link: None,
+        }
+    }
 }
 
 pub type ConfigDatabases = HashMap<String, ConfigDatabase>;
