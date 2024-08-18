@@ -1,11 +1,11 @@
+extern crate chrono;
 extern crate directories;
 extern crate serde;
-extern crate chrono;
-use std::path::PathBuf;
-use std::collections::HashMap;
 use clap::{Args, Parser, Subcommand};
 use directories::ProjectDirs;
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
+use std::path::PathBuf;
 
 /// A terminal-based academic paper manager
 #[derive(Debug, Clone, Parser)]
@@ -48,6 +48,26 @@ pub struct CommandAddArgs {
 }
 
 #[derive(Args, Clone, Debug)]
+pub struct CommandConfigArgs {
+    /// The name of the owner
+    #[arg(short = 'n', long = "owner.name", name = "NAME", num_args = 0..=1, default_missing_value = Self::_JUST_TO_PRINT_THIS_FIELD)]
+    pub owner_name: Option<String>,
+    /// The email of the owner
+    #[arg(short = 'e', long = "owner.email", name = "EMAIL", num_args = 0..=1, default_missing_value = Self::_JUST_TO_PRINT_THIS_FIELD)]
+    pub owner_email: Option<String>,
+    /// The affiliation of the owner
+    #[arg(short = 'a', long = "owner.affiliation", name = "AFFILIATION", num_args = 0..=1, default_missing_value = Self::_JUST_TO_PRINT_THIS_FIELD)]
+    pub owner_affiliation: Option<String>,
+    /// The link of the owner
+    #[arg(short = 'l', long = "owner.link", name = "LINK", num_args = 0..=1, default_missing_value = Self::_JUST_TO_PRINT_THIS_FIELD)]
+    pub owner_link: Option<String>,
+}
+
+impl CommandConfigArgs {
+    const _JUST_TO_PRINT_THIS_FIELD: &'static str = "JUST_TO_PRINT_THIS_FIELD";
+}
+
+#[derive(Args, Clone, Debug)]
 pub struct CommandEditArgs {
     #[arg(index = 1)]
     pub id: String,
@@ -56,18 +76,17 @@ pub struct CommandEditArgs {
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct CommandInfoArgs {
-}
+pub struct CommandInfoArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandInitArgs {
+    /// The directory to initialize
     #[arg(index = 1)]
     pub dir: Option<String>,
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct CommandListArgs {
-}
+pub struct CommandListArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandOpenArgs {
@@ -76,12 +95,10 @@ pub struct CommandOpenArgs {
 }
 
 #[derive(Args, Clone, Debug)]
-pub struct CommandSearchArgs {
-}
+pub struct CommandSearchArgs {}
 
 #[derive(Args, Clone, Debug)]
-pub struct CommandShowArgs {
-}
+pub struct CommandShowArgs {}
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandRemoveArgs {
@@ -95,6 +112,8 @@ pub enum Commands {
     Activate(CommandActivateArgs),
     /// Add a new paper to the database
     Add(CommandAddArgs),
+    /// Configure TermiPaper
+    Config(CommandConfigArgs),
     /// Edit a paper in the database
     Edit(CommandEditArgs),
     /// List papers in the database
@@ -121,7 +140,7 @@ pub trait PaperDir {
             panic!("Cannot find the termipaper project directories");
         }
     }
-    
+
     fn _config_dir() -> PathBuf {
         Self::_project_dirs().config_dir().to_path_buf()
     }
@@ -186,7 +205,7 @@ pub struct Config {
     pub activated: Option<String>,
 }
 
-impl PaperDir for Config { }
+impl PaperDir for Config {}
 
 impl Config {
     fn _config_file() -> PathBuf {
@@ -210,7 +229,10 @@ impl Config {
             match serde_yaml::from_str(&config_str) {
                 Ok(config) => config,
                 Err(_) => {
-                    eprintln!("Error: Cannot parse the config file at '{}'.", Self::_config_dir_str());
+                    eprintln!(
+                        "Error: Cannot parse the config file at '{}'.",
+                        Self::_config_dir_str()
+                    );
                     Self::new()
                 }
             }
@@ -220,7 +242,7 @@ impl Config {
     }
 
     /// Save the config to the config file
-    /// 
+    ///
     /// It will overwrite the existing config file, so be careful.
     pub fn to_file(&self) {
         let config_file = Self::_config_file();

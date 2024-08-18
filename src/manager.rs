@@ -30,6 +30,7 @@ impl Manager {
         match &self.args.cmd {
             Commands::Activate(_) => self.cmd_activate(),
             // Commands::Add(_) => self.cmd_add(),
+            Commands::Config(_) => self.cmd_config(),
             // Commands::Edit(_) => self.cmd_edit(),
             Commands::Info(_) => self.cmd_info(),
             Commands::Init(_) => self.cmd_init(),
@@ -157,6 +158,10 @@ impl Manager {
             );
             return Err(());
         }
+        Ok(())
+    }
+
+    pub fn cmd_config(&self) -> Result<(), ()> {
         Ok(())
     }
 
