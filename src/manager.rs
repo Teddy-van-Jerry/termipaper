@@ -29,7 +29,7 @@ impl Manager {
     pub fn run(&self) -> Result<(), ()> {
         match &self.args.cmd {
             Commands::Activate(_) => self.cmd_activate(),
-            // Commands::Add(_) => self.cmd_add(),
+            Commands::Add(_) => self.cmd_add(),
             Commands::Config(_) => self.cmd_config(),
             // Commands::Edit(_) => self.cmd_edit(),
             Commands::Info(_) => self.cmd_info(),
@@ -139,6 +139,11 @@ impl Manager {
         Ok(())
     }
 
+    /// TermiPaper Command: add
+    pub fn cmd_add(&self) -> Result<(), ()> {
+        Ok(())
+    }
+
     pub fn cmd_info(&self) -> Result<(), ()> {
         // get the activated database
         let activated = match &self.config.activated {
@@ -168,7 +173,7 @@ impl Manager {
             _ => {
                 assert!(
                     false,
-                    "Internal Error: This function should only be called the 'config' command."
+                    "Internal Error: This function should only be called in the 'config' command."
                 );
                 return Err(());
             }

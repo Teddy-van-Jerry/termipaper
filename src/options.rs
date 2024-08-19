@@ -1,6 +1,3 @@
-extern crate chrono;
-extern crate directories;
-extern crate serde;
 use clap::{Args, Parser, Subcommand};
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
