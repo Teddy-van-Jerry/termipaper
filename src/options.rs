@@ -38,8 +38,10 @@ pub struct CommandActivateArgs {
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandAddArgs {
+    /// The unique id of the paper to edit
     #[arg(index = 1)]
     pub id: String,
+    /// The file of the paper to add
     #[arg(short, long)]
     pub file: Option<String>,
 }
@@ -58,6 +60,9 @@ pub struct CommandConfigArgs {
     /// The link of the owner
     #[arg(short = 'l', long = "owner.link", name = "LINK", num_args = 0..=1, default_missing_value = Self::_JUST_TO_PRINT_THIS_FIELD)]
     pub owner_link: Option<String>,
+    /// Show the file path of the config file
+    #[arg(long = "show-config-path", default_value = "false", hide = true)]
+    pub show_config_path: bool,
 }
 
 impl CommandConfigArgs {
@@ -66,8 +71,10 @@ impl CommandConfigArgs {
 
 #[derive(Args, Clone, Debug)]
 pub struct CommandEditArgs {
+    /// The unique id of the paper to edit
     #[arg(index = 1)]
     pub id: String,
+    /// The file of the paper to edit
     #[arg(short, long)]
     pub file: Option<String>,
 }
@@ -219,6 +226,10 @@ impl Config {
     fn _config_file() -> PathBuf {
         let config_dir = Self::_config_dir();
         config_dir.join("config.yml")
+    }
+
+    pub fn _config_file_str() -> String {
+        Self::_config_file().to_str().unwrap().to_string()
     }
 
     pub fn new() -> Self {

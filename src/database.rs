@@ -63,3 +63,20 @@ impl TpIndex for PaperCategory {
         self.dir.join("index.termipaper.yml")
     }
 }
+
+pub trait TpManage {
+    fn add(&mut self, entry: PaperEntry);
+}
+
+impl TpManage for PaperCategory {
+    fn add(&mut self, entry: PaperEntry) {
+        self.papers.push(entry);
+    }
+}
+
+impl TpManage for Database {
+    fn add(&mut self, entry: PaperEntry) {
+        // TODO: check category
+        self.top_category.add(entry);
+    }
+}

@@ -1,8 +1,10 @@
+use super::database::{Database, PaperEntry};
 use super::options::Cli;
+use super::options::Commands;
 use super::options::Config;
+use super::options::ConfigDatabase;
 use super::options::PaperDir;
-use crate::options::Commands;
-use crate::options::ConfigDatabase;
+use super::database::TpManage;
 
 #[derive(Debug, Clone)]
 pub struct Manager {
@@ -141,6 +143,35 @@ impl Manager {
 
     /// TermiPaper Command: add
     pub fn cmd_add(&self) -> Result<(), ()> {
+        // 1. get the correct database directory
+        let database_dir = match &self.config.activated {
+            Some(activated) => activated.clone(),
+            None => {
+                eprintln!("Error: No database is activated.");
+                return Err(());
+            }
+        };
+        // 2. use the Database struct to handle the database
+        let mut database = Database::new(database_dir);
+        // 3. get the paper entry from the user input
+        let args = match &self.args.cmd {
+            Commands::Add(args) => args,
+            _ => {
+                assert!(
+                    false,
+                    "Internal Error: This function should only be called in the 'add' command."
+                );
+                return Err(());
+            }
+        };
+        // 4. add the paper entry to the database
+        database.add(PaperEntry {
+            id: args.id.clone(),
+            title: None,
+            authors: None,
+            year: None,
+        });
+        // 5. save the database to the file (TODO)
         Ok(())
     }
 
@@ -178,6 +209,11 @@ impl Manager {
                 return Err(());
             }
         };
+        // hidden option for development and testing
+        if args.show_config_path {
+            println!("{}", Config::_config_file_str());
+            return Ok(());
+        }
         let mut has_args = false; // from the user input perspective
         let mut config_edited = false;
         let mut owner = self
