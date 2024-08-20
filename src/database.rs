@@ -15,6 +15,22 @@ impl Database {
             top_category: PaperCategory::new(vec![], PathBuf::from(dir)),
         }
     }
+
+    pub fn new_from_index(dir: String) -> Self {
+        let mut db = Self::new(dir.clone());
+        let index = db.index_from_file();
+        match index {
+            Ok(index) => {
+                db.top_category.papers = index.papers;
+                db.top_category.sub_categories = index.sub_categories;
+                db
+            },
+            Err(_) => {
+                eprintln!("Error: failed to load index file of database at '{}'.", dir);
+                std::process::exit(1);
+            },
+        }
+    }
 }
 
 #[derive(Debug, Clone)]
@@ -71,12 +87,13 @@ trait TpIndex {
         if index_file.exists() {
             let index_str = std::fs::read_to_string(&index_file).unwrap();
             match serde_yaml::from_str(&index_str) {
-                Ok(index) => index,
-                Err(_) => {
+                Ok(index) => Ok(index),
+                Err(e) => {
                     eprintln!(
                         "Error: failed to parse index file at '{}'.",
                         index_file.to_str().unwrap()
                     );
+                    eprintln!("Error: {:?}", e);
                     Err(())
                 }
             }
@@ -105,18 +122,25 @@ impl TpIndex for PaperCategory {
 }
 
 pub trait TpManage {
-    fn add(&mut self, entry: PaperEntry);
+    fn add(&mut self, entry: PaperEntry) -> Result<(), Box<dyn Error>>;
 }
 
 impl TpManage for PaperCategory {
-    fn add(&mut self, entry: PaperEntry) {
+    fn add(&mut self, entry: PaperEntry) -> Result<(), Box<dyn Error>> {
         self.papers.push(entry);
+        Ok(())
     }
 }
 
 impl TpManage for Database {
-    fn add(&mut self, entry: PaperEntry) {
-        // TODO: check category
-        self.top_category.add(entry);
+    fn add(&mut self, entry: PaperEntry) -> Result<(), Box<dyn Error>> {
+        // 1. add to the top category (TODO: check category)
+        self.top_category.add(entry)?;
+        // 2. save the index
+        let index = Index {
+            papers: self.top_category.papers.clone(),
+            sub_categories: self.top_category.sub_categories.clone(),
+        };
+        self.index_to_file(&index)
     }
 }

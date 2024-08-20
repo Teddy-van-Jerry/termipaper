@@ -1,6 +1,14 @@
 #!/bin/sh
 
 ################################################################################
+# Step 0: check if the current directory is the root of the project
+################################################################################
+if [ ! -f Cargo.toml ]; then
+    echo "Error: please run this script from the root of the project."
+    exit 1
+fi
+
+################################################################################
 # Step 1: make a copy of the original config file
 ################################################################################
 # happily use the hidden option --show-config-path
@@ -19,7 +27,12 @@ if [ -f "$ORIGINAL_CONFIG" ]; then
 fi
 
 ################################################################################
-# Step 2: initialize the config file for testing TermiPaper
+# Step 2: Remove the test papers directory
+################################################################################
+rm -rf tests/papers
+
+################################################################################
+# Step 3: initialize the config file for testing TermiPaper
 ################################################################################
 cargo run -q -- config --owner.name        "TermiPaper Tester"     \
                        --owner.email       "termipaper@wqzhao.org" \

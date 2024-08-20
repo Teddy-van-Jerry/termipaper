@@ -152,7 +152,7 @@ impl Manager {
             }
         };
         // 2. use the Database struct to handle the database
-        let mut database = Database::new(database_dir);
+        let mut database = Database::new_from_index(database_dir);
         // 3. get the paper entry from the user input
         let args = match &self.args.cmd {
             Commands::Add(args) => args,
@@ -170,7 +170,7 @@ impl Manager {
             title: None,
             authors: None,
             year: None,
-        });
+        }).map_err(|_| ())?;
         // 5. save the database to the file (TODO)
         Ok(())
     }
