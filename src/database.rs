@@ -36,6 +36,7 @@ impl Database {
 
 #[derive(Debug, Clone)]
 pub struct PaperCategory {
+    #[allow(unused)]
     relative_path: Vec<String>,
     dir: PathBuf,
     papers: PaperEntries,
@@ -73,7 +74,19 @@ pub struct PaperEntry {
     pub title: Option<String>,
     pub authors: Option<Vec<String>>,
     pub year: Option<u32>,
+    pub file: Option<String>,
     // to be added
+}
+
+impl PaperEntry {
+    pub fn new() -> Self {
+        Self {
+            title: None,
+            authors: None,
+            year: None,
+            file: None,
+        }
+    }
 }
 
 type PaperID = String;
@@ -124,21 +137,90 @@ impl TpIndex for PaperCategory {
 
 pub trait TpManage {
     /// Add a paper entry to the category
-    /// 
+    ///
     /// If the paper entry is already in the category, it will be overwritten.
     fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>>;
 }
 
+fn _ck_id(id: &PaperID) -> Result<(), Box<dyn Error>> {
+    if id.is_empty() {
+        eprintln!("Error: the paper entry ID is empty.");
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "empty ID",
+        )));
+    } else if id.contains(' ') {
+        eprintln!("Error: the paper entry ID '{}' contains space.", id);
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "space in ID",
+        )));
+    } else if id.contains('/') || id.contains('\\') {
+        eprintln!("Error: the paper entry ID '{}' contains slash.", id);
+        return Err(Box::new(std::io::Error::new(
+            std::io::ErrorKind::InvalidInput,
+            "slash in ID",
+        )));
+    }
+    Ok(())
+}
+
 impl TpManage for PaperCategory {
-    fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>> {
+    fn add(
+        &mut self,
+        id: PaperID,
+        mut entry: PaperEntry,
+        force: bool,
+    ) -> Result<(), Box<dyn Error>> {
         // 1. check if the paper entry is already in the category
         if self.papers.contains_key(&id) && !force {
-            eprintln!("Error: the paper entry '{}' already exists in the category.", id);
-            return Err(Box::new(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "paper entry already exists")));
+            eprintln!(
+                "Error: the paper entry '{}' already exists in the category.",
+                id
+            );
+            return Err(Box::new(std::io::Error::new(
+                std::io::ErrorKind::AlreadyExists,
+                "paper entry already exists",
+            )));
         }
-        // 2. add the paper entry to the category
+        // 2. copy the file to the category
+        let outside_file = entry.file.clone();
+        if let Some(outside_file) = outside_file {
+            // check if the file exists
+            let outside_file_path = PathBuf::from(&outside_file);
+            if !outside_file_path.exists() {
+                eprintln!("Error: the file '{}' does not exist.", outside_file);
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "file not found",
+                )));
+            } else {
+                let file_name = match outside_file_path.extension() {
+                    Some(ext) => {
+                        let ext = ext.to_str().unwrap();
+                        // if ext != "pdf" {
+                        //     eprintln!("Error: the file '{}' is not a PDF file.", outside_file);
+                        //     return Err(Box::new(std::io::Error::new(std::io::ErrorKind::InvalidInput, "not a PDF file")));
+                        // }
+                        format!("{}.{}", &id, ext)
+                    }
+                    _ => id.clone(),
+                };
+                let inside_file = self.dir.join(file_name);
+                std::fs::copy(outside_file_path, &inside_file)?;
+                entry.file = Some(
+                    inside_file
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .to_string(),
+                );
+            }
+        }
+        // 3. add the paper entry to the category
         self.papers.insert(id, entry);
-        // 3. save the index
+        // 4. save the index
         let index = Index {
             papers: self.papers.clone(),
             sub_categories: self.sub_categories.clone(),
@@ -149,7 +231,9 @@ impl TpManage for PaperCategory {
 
 impl TpManage for Database {
     fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>> {
-        // 1. add to the top category (TODO: check category)
+        // 1. safety check
+        _ck_id(&id)?;
+        // 2. add to the top category (TODO: check category)
         self.top_category.add(id, entry, force)
     }
 }

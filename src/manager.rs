@@ -1,10 +1,7 @@
-use super::database::TpManage;
-use super::database::{Database, PaperEntry};
-use super::options::Cli;
-use super::options::Commands;
-use super::options::Config;
-use super::options::ConfigDatabase;
-use super::options::PaperDir;
+use super::{
+    database::{Database, PaperEntry, TpManage},
+    options::{Cli, Commands, Config, ConfigDatabase, PaperDir},
+};
 
 #[derive(Debug, Clone)]
 pub struct Manager {
@@ -165,14 +162,12 @@ impl Manager {
             }
         };
         // 4. add the paper entry to the database
+        let mut paper = PaperEntry::new();
+        paper.file = args.file.clone();
         database
             .add(
                 args.id.clone(),
-                PaperEntry {
-                    title: None,
-                    authors: None,
-                    year: None,
-                },
+                paper,
                 args.force,
             )
             .map_err(|_| ())?;
