@@ -163,8 +163,14 @@ impl Manager {
             }
         };
         // 4. add the paper entry to the database
-        let mut paper = PaperEntry::new();
-        paper.file = args.file.clone();
+        // let mut paper = PaperEntry::new();
+        // paper.file = args.file.clone();
+        let paper = PaperEntry {
+            file: args.file.clone(),
+            title: args.title.clone(),
+            authors: args.authors.clone(),
+            year: args.year.clone(),
+        };
         database
             .add(
                 args.id.clone(),

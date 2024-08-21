@@ -79,6 +79,7 @@ pub struct PaperEntry {
 }
 
 impl PaperEntry {
+    #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
             title: None,
@@ -248,7 +249,7 @@ impl TpManage for PaperCategory {
             }
             None => {
                 eprintln!(
-                    "Error: the paper entry '{}' does not exist in the category.",
+                    "Error: the paper entry '{}' does not exist in the database.",
                     id
                 );
                 return Err(Box::new(std::io::Error::new(
