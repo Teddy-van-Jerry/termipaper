@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use std::error::Error;
 use std::path::PathBuf;
 
@@ -24,11 +25,11 @@ impl Database {
                 db.top_category.papers = index.papers;
                 db.top_category.sub_categories = index.sub_categories;
                 db
-            },
+            }
             Err(_) => {
                 eprintln!("Error: failed to load index file of database at '{}'.", dir);
                 std::process::exit(1);
-            },
+            }
         }
     }
 }
@@ -46,7 +47,7 @@ impl PaperCategory {
         Self {
             relative_path,
             dir,
-            papers: vec![],
+            papers: HashMap::new(),
             sub_categories: vec![],
         }
     }
@@ -61,7 +62,7 @@ pub struct Index {
 impl Index {
     pub fn new() -> Self {
         Self {
-            papers: vec![],
+            papers: HashMap::new(),
             sub_categories: vec![],
         }
     }
@@ -69,14 +70,14 @@ impl Index {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaperEntry {
-    pub id: String,
     pub title: Option<String>,
     pub authors: Option<Vec<String>>,
     pub year: Option<u32>,
     // to be added
 }
 
-type PaperEntries = Vec<PaperEntry>;
+type PaperID = String;
+type PaperEntries = HashMap<PaperID, PaperEntry>;
 
 /// Index of TermiPaper database
 trait TpIndex {
@@ -122,25 +123,33 @@ impl TpIndex for PaperCategory {
 }
 
 pub trait TpManage {
-    fn add(&mut self, entry: PaperEntry) -> Result<(), Box<dyn Error>>;
+    /// Add a paper entry to the category
+    /// 
+    /// If the paper entry is already in the category, it will be overwritten.
+    fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>>;
 }
 
 impl TpManage for PaperCategory {
-    fn add(&mut self, entry: PaperEntry) -> Result<(), Box<dyn Error>> {
-        self.papers.push(entry);
-        Ok(())
+    fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>> {
+        // 1. check if the paper entry is already in the category
+        if self.papers.contains_key(&id) && !force {
+            eprintln!("Error: the paper entry '{}' already exists in the category.", id);
+            return Err(Box::new(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "paper entry already exists")));
+        }
+        // 2. add the paper entry to the category
+        self.papers.insert(id, entry);
+        // 3. save the index
+        let index = Index {
+            papers: self.papers.clone(),
+            sub_categories: self.sub_categories.clone(),
+        };
+        self.index_to_file(&index)
     }
 }
 
 impl TpManage for Database {
-    fn add(&mut self, entry: PaperEntry) -> Result<(), Box<dyn Error>> {
+    fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>> {
         // 1. add to the top category (TODO: check category)
-        self.top_category.add(entry)?;
-        // 2. save the index
-        let index = Index {
-            papers: self.top_category.papers.clone(),
-            sub_categories: self.top_category.sub_categories.clone(),
-        };
-        self.index_to_file(&index)
+        self.top_category.add(id, entry, force)
     }
 }

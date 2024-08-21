@@ -1,10 +1,10 @@
+use super::database::TpManage;
 use super::database::{Database, PaperEntry};
 use super::options::Cli;
 use super::options::Commands;
 use super::options::Config;
 use super::options::ConfigDatabase;
 use super::options::PaperDir;
-use super::database::TpManage;
 
 #[derive(Debug, Clone)]
 pub struct Manager {
@@ -165,12 +165,17 @@ impl Manager {
             }
         };
         // 4. add the paper entry to the database
-        database.add(PaperEntry {
-            id: args.id.clone(),
-            title: None,
-            authors: None,
-            year: None,
-        }).map_err(|_| ())?;
+        database
+            .add(
+                args.id.clone(),
+                PaperEntry {
+                    title: None,
+                    authors: None,
+                    year: None,
+                },
+                args.force,
+            )
+            .map_err(|_| ())?;
         // 5. save the database to the file (TODO)
         Ok(())
     }

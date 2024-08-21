@@ -44,6 +44,9 @@ pub struct CommandAddArgs {
     /// The file of the paper to add
     #[arg(short, long)]
     pub file: Option<String>,
+    /// Force to add the paper even if the id exists
+    #[arg(long)]
+    pub force: bool,
 }
 
 #[derive(Args, Clone, Debug)]
