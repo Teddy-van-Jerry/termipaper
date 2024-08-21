@@ -86,9 +86,18 @@ pub struct CommandEditArgs {
     /// The unique id of the paper to edit
     #[arg(index = 1)]
     pub id: String,
-    /// The file of the paper to edit
-    #[arg(short, long)]
+    /// The file of the paper to add
+    #[arg(short = 'f', long)]
     pub file: Option<String>,
+    /// Title of the paper
+    #[arg(short = 't', long)]
+    pub title: Option<String>,
+    /// Author of the paper (one by one with multiple flags)
+    #[arg(short = 'a', long = "author")]
+    pub authors: Option<Vec<String>>,
+    /// Year of the paper
+    #[arg(short = 'y', long)]
+    pub year: Option<u32>,
 }
 
 #[derive(Args, Clone, Debug)]

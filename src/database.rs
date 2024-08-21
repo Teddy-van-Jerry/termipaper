@@ -52,6 +52,48 @@ impl PaperCategory {
             sub_categories: vec![],
         }
     }
+
+    fn copy_file(
+        dir: PathBuf,
+        outside_file: Option<String>,
+        id: &String,
+        entry_ref: &mut PaperEntry,
+    ) -> Result<(), Box<dyn Error>> {
+        if let Some(outside_file) = outside_file {
+            // check if the file exists
+            let outside_file_path = PathBuf::from(&outside_file);
+            if !outside_file_path.exists() {
+                eprintln!("Error: the file '{}' does not exist.", outside_file);
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "file not found",
+                )));
+            } else {
+                let file_name = match outside_file_path.extension() {
+                    Some(ext) => {
+                        let ext = ext.to_str().unwrap();
+                        // if ext != "pdf" {
+                        //     eprintln!("Error: the file '{}' is not a PDF file.", outside_file);
+                        //     return Err(Box::new(std::io::Error::new(std::io::ErrorKind::InvalidInput, "not a PDF file")));
+                        // }
+                        format!("{}.{}", &id, ext)
+                    }
+                    _ => id.clone(),
+                };
+                let inside_file = dir.join(file_name);
+                std::fs::copy(outside_file_path, &inside_file)?;
+                entry_ref.file = Some(
+                    inside_file
+                        .file_name()
+                        .unwrap()
+                        .to_str()
+                        .unwrap()
+                        .to_string(),
+                );
+            }
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -69,6 +111,10 @@ impl Index {
     }
 }
 
+/// Paper entry in the database
+///
+/// The fields are now for testing purpose.
+/// More fields will be added in the future.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaperEntry {
     pub title: Option<String>,
@@ -86,6 +132,18 @@ impl PaperEntry {
             authors: None,
             year: None,
             file: None,
+        }
+    }
+
+    pub fn update_metadata(&mut self, paper: &PaperEntry) {
+        if let Some(title) = paper.title.clone() {
+            self.title = Some(title);
+        }
+        if let Some(authors) = paper.authors.clone() {
+            self.authors = Some(authors);
+        }
+        if let Some(year) = paper.year {
+            self.year = Some(year);
         }
     }
 }
@@ -137,12 +195,15 @@ impl TpIndex for PaperCategory {
 }
 
 pub trait TpManage {
-    /// Add a paper entry to the category
+    /// Add a paper entry
     ///
     /// If the paper entry is already in the category, it will be overwritten.
     fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>>;
 
-    /// Remove a paper entry from the category
+    /// Edit a paper entry
+    fn edit(&mut self, id: PaperID, entry: PaperEntry) -> Result<(), Box<dyn Error>>;
+
+    /// Remove a paper entry
     fn remove(&mut self, id: PaperID) -> Result<(), Box<dyn Error>>;
 }
 
@@ -177,6 +238,7 @@ impl TpManage for PaperCategory {
         force: bool,
     ) -> Result<(), Box<dyn Error>> {
         // 1. check if the paper entry is already in the category
+        // (TODO: more efficient way as using the return value to avoid double check)
         if self.papers.contains_key(&id) && !force {
             eprintln!(
                 "Error: the paper entry '{}' already exists in the category.",
@@ -189,39 +251,7 @@ impl TpManage for PaperCategory {
         }
         // 2. copy the file to the category
         let outside_file = entry.file.clone();
-        if let Some(outside_file) = outside_file {
-            // check if the file exists
-            let outside_file_path = PathBuf::from(&outside_file);
-            if !outside_file_path.exists() {
-                eprintln!("Error: the file '{}' does not exist.", outside_file);
-                return Err(Box::new(std::io::Error::new(
-                    std::io::ErrorKind::NotFound,
-                    "file not found",
-                )));
-            } else {
-                let file_name = match outside_file_path.extension() {
-                    Some(ext) => {
-                        let ext = ext.to_str().unwrap();
-                        // if ext != "pdf" {
-                        //     eprintln!("Error: the file '{}' is not a PDF file.", outside_file);
-                        //     return Err(Box::new(std::io::Error::new(std::io::ErrorKind::InvalidInput, "not a PDF file")));
-                        // }
-                        format!("{}.{}", &id, ext)
-                    }
-                    _ => id.clone(),
-                };
-                let inside_file = self.dir.join(file_name);
-                std::fs::copy(outside_file_path, &inside_file)?;
-                entry.file = Some(
-                    inside_file
-                        .file_name()
-                        .unwrap()
-                        .to_str()
-                        .unwrap()
-                        .to_string(),
-                );
-            }
-        }
+        Self::copy_file(self.dir.clone(), outside_file, &id, &mut entry)?;
         // 3. add the paper entry to the category
         self.papers.insert(id, entry);
         // 4. save the index
@@ -230,6 +260,33 @@ impl TpManage for PaperCategory {
             sub_categories: self.sub_categories.clone(),
         };
         self.index_to_file(&index)
+    }
+
+    fn edit(&mut self, id: PaperID, entry: PaperEntry) -> Result<(), Box<dyn Error>> {
+        match self.papers.get_mut(&id) {
+            Some(entry_ref) => {
+                // 1. copy the file to the category
+                let outside_file = entry.file.clone();
+                Self::copy_file(self.dir.clone(), outside_file, &id, entry_ref)?;
+                entry_ref.update_metadata(&entry);
+                // 2. save the index
+                let index = Index {
+                    papers: self.papers.clone(),
+                    sub_categories: self.sub_categories.clone(),
+                };
+                self.index_to_file(&index)
+            }
+            None => {
+                eprintln!(
+                    "Error: the paper entry '{}' does not exist in the database.",
+                    id
+                );
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "paper entry not found",
+                )));
+            }
+        }
     }
 
     fn remove(&mut self, id: PaperID) -> Result<(), Box<dyn Error>> {
@@ -267,6 +324,13 @@ impl TpManage for Database {
         _ck_id(&id)?;
         // 2. add to the top category (TODO: check category)
         self.top_category.add(id, entry, force)
+    }
+
+    fn edit(&mut self, id: PaperID, entry: PaperEntry) -> Result<(), Box<dyn Error>> {
+        // 1. safety check
+        _ck_id(&id)?;
+        // 2. edit from the top category (TODO: check category)
+        self.top_category.edit(id, entry)
     }
 
     fn remove(&mut self, id: PaperID) -> Result<(), Box<dyn Error>> {

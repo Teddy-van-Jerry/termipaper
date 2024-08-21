@@ -30,7 +30,7 @@ impl Manager {
             Commands::Activate(_) => self.cmd_activate(),
             Commands::Add(_) => self.cmd_add(),
             Commands::Config(_) => self.cmd_config(),
-            // Commands::Edit(_) => self.cmd_edit(),
+            Commands::Edit(_) => self.cmd_edit(),
             Commands::Info(_) => self.cmd_info(),
             Commands::Init(_) => self.cmd_init(),
             // Commands::List(_) => self.cmd_list(),
@@ -172,12 +172,42 @@ impl Manager {
             year: args.year.clone(),
         };
         database
-            .add(
-                args.id.clone(),
-                paper,
-                args.force,
-            )
+            .add(args.id.clone(), paper, args.force)
             .map_err(|_| ())?;
+        // 5. save the database to the file (TODO)
+        Ok(())
+    }
+
+    pub fn cmd_edit(&self) -> Result<(), ()> {
+        // 1. get the correct database directory
+        let database_dir = match &self.config.activated {
+            Some(activated) => activated.clone(),
+            None => {
+                eprintln!("Error: No database is activated.");
+                return Err(());
+            }
+        };
+        // 2. use the Database struct to handle the database
+        let mut database = Database::new_from_index(database_dir);
+        // 3. get the paper entry from the user input
+        let args = match &self.args.cmd {
+            Commands::Edit(args) => args,
+            _ => {
+                assert!(
+                    false,
+                    "Internal Error: This function should only be called in the 'edit' command."
+                );
+                return Err(());
+            }
+        };
+        // 4. edit the paper entry from the database
+        let paper = PaperEntry {
+            file: args.file.clone(),
+            title: args.title.clone(),
+            authors: args.authors.clone(),
+            year: args.year.clone(),
+        };
+        database.edit(args.id.clone(), paper).map_err(|_| ())?;
         // 5. save the database to the file (TODO)
         Ok(())
     }
