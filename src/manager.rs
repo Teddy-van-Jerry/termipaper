@@ -34,6 +34,7 @@ impl Manager {
             Commands::Info(_) => self.cmd_info(),
             Commands::Init(_) => self.cmd_init(),
             // Commands::List(_) => self.cmd_list(),
+            Commands::Remove(_) => self.cmd_remove(),
             // Commands::Open(_) => self.cmd_open(),
             // Commands::Search(_) => self.cmd_search(),
             _ => {
@@ -327,6 +328,35 @@ impl Manager {
         } else {
             println!("Info: The database is already initialized: {}", dir_to_init);
         }
+        Ok(())
+    }
+
+    /// TermiPaper Command: remove
+    pub fn cmd_remove(&self) -> Result<(), ()> {
+        // 1. get the correct database directory
+        let database_dir = match &self.config.activated {
+            Some(activated) => activated.clone(),
+            None => {
+                eprintln!("Error: No database is activated.");
+                return Err(());
+            }
+        };
+        // 2. use the Database struct to handle the database
+        let mut database = Database::new_from_index(database_dir);
+        // 3. get the paper entry from the user input
+        let args = match &self.args.cmd {
+            Commands::Remove(args) => args,
+            _ => {
+                assert!(
+                    false,
+                    "Internal Error: This function should only be called in the 'remove' command."
+                );
+                return Err(());
+            }
+        };
+        // 4. remove the paper entry from the database
+        database.remove(args.id.clone()).map_err(|_| ())?;
+        // 5. save the database to the file (TODO)
         Ok(())
     }
 }

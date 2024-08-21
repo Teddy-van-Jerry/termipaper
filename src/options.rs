@@ -110,7 +110,7 @@ pub struct CommandShowArgs {}
 #[derive(Args, Clone, Debug)]
 pub struct CommandRemoveArgs {
     #[arg(index = 1)]
-    id: String,
+    pub id: String,
 }
 
 #[derive(Subcommand, Debug, Clone)]

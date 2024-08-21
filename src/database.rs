@@ -140,6 +140,9 @@ pub trait TpManage {
     ///
     /// If the paper entry is already in the category, it will be overwritten.
     fn add(&mut self, id: PaperID, entry: PaperEntry, force: bool) -> Result<(), Box<dyn Error>>;
+
+    /// Remove a paper entry from the category
+    fn remove(&mut self, id: PaperID) -> Result<(), Box<dyn Error>>;
 }
 
 fn _ck_id(id: &PaperID) -> Result<(), Box<dyn Error>> {
@@ -227,6 +230,34 @@ impl TpManage for PaperCategory {
         };
         self.index_to_file(&index)
     }
+
+    fn remove(&mut self, id: PaperID) -> Result<(), Box<dyn Error>> {
+        match self.papers.remove(&id) {
+            Some(entry) => {
+                // 1. remove the file from the category
+                if let Some(file) = &entry.file {
+                    let file_path = self.dir.join(file);
+                    std::fs::remove_file(file_path)?;
+                }
+                // 2. save the index
+                let index = Index {
+                    papers: self.papers.clone(),
+                    sub_categories: self.sub_categories.clone(),
+                };
+                self.index_to_file(&index)
+            }
+            None => {
+                eprintln!(
+                    "Error: the paper entry '{}' does not exist in the category.",
+                    id
+                );
+                return Err(Box::new(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "paper entry not found",
+                )));
+            }
+        }
+    }
 }
 
 impl TpManage for Database {
@@ -235,5 +266,12 @@ impl TpManage for Database {
         _ck_id(&id)?;
         // 2. add to the top category (TODO: check category)
         self.top_category.add(id, entry, force)
+    }
+
+    fn remove(&mut self, id: PaperID) -> Result<(), Box<dyn Error>> {
+        // 1. safety check
+        _ck_id(&id)?;
+        // 2. remove from the top category (TODO: check category)
+        self.top_category.remove(id)
     }
 }
