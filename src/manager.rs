@@ -166,6 +166,7 @@ impl Manager {
         // let mut paper = PaperEntry::new();
         // paper.file = args.file.clone();
         let paper = PaperEntry {
+            doi: args.doi.clone(),
             file: args.file.clone(),
             title: args.title.clone(),
             authors: args.authors.clone(),
@@ -202,6 +203,7 @@ impl Manager {
         };
         // 4. edit the paper entry from the database
         let paper = PaperEntry {
+            doi: args.doi.clone(),
             file: args.file.clone(),
             title: args.title.clone(),
             authors: args.authors.clone(),

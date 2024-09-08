@@ -3,7 +3,7 @@ name = "termipaper"
 description = "A terminal-based academic paper manager"
 repository = "https://github.com/Teddy-van-Jerry/termipaper"
 authors = ["Teddy van Jerry <me@teddy-van-jerry.org>"]
-version = "0.1.0"
+version = "0.1.1"
 readme = "README.md"
 license = "GPL-3.0-or-later"
 exclude = [
@@ -24,5 +24,6 @@ edition = "2021"
 chrono = "0.4"
 clap = { version = "4.5.11", features = ["derive"] }
 directories = "5.0"
+doi = { version = "0.3", features = ["proxy"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_yaml = "0.9"

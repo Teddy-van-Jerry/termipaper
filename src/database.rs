@@ -117,6 +117,7 @@ impl Index {
 /// More fields will be added in the future.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PaperEntry {
+    pub doi: Option<String>,
     pub title: Option<String>,
     pub authors: Option<Vec<String>>,
     pub year: Option<u32>,
@@ -128,6 +129,7 @@ impl PaperEntry {
     #[allow(dead_code)]
     pub fn new() -> Self {
         Self {
+            doi: None,
             title: None,
             authors: None,
             year: None,

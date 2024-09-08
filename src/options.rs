@@ -53,6 +53,9 @@ pub struct CommandAddArgs {
     /// Year of the paper
     #[arg(short = 'y', long)]
     pub year: Option<u32>,
+    /// DOI of the paper
+    #[arg(short = 'd', long)]
+    pub doi: Option<String>,
     /// Force to add the paper even if the id exists
     #[arg(long)]
     pub force: bool,
@@ -95,6 +98,9 @@ pub struct CommandEditArgs {
     /// Author of the paper (one by one with multiple flags)
     #[arg(short = 'a', long = "author")]
     pub authors: Option<Vec<String>>,
+    /// DOI of the paper
+    #[arg(short = 'd', long)]
+    pub doi: Option<String>,
     /// Year of the paper
     #[arg(short = 'y', long)]
     pub year: Option<u32>,
